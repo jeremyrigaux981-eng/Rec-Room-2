@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#10152d">
+<title>ClubVerse — Social Playground 3D</title>
+<style>
+:root{--glass:rgba(12,20,43,.78);--line:rgba(255,255,255,.2);--cyan:#71f2ff;--pink:#ff77d8;--gold:#ffe27a}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10152d;color:#fff;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;touch-action:none}canvas{display:block}
+button{font:inherit;cursor:pointer}
+#hud{position:fixed;inset:0;pointer-events:none}
+.glass{background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(12px);box-shadow:0 10px 32px #05091b55;border-radius:17px}
+#brand{position:absolute;top:14px;left:14px;padding:10px 14px;font-weight:1000;letter-spacing:.8px;font-size:17px}
+#brand span{color:var(--cyan)}#brand small{display:block;font-size:9px;letter-spacing:2px;color:#bac9f4;margin-top:2px}
+#stats{position:absolute;top:14px;right:14px;display:flex;gap:7px;font-size:13px;font-weight:850}
+.stat{padding:11px 13px;white-space:nowrap}
+#mission{position:absolute;top:86px;left:50%;transform:translateX(-50%);padding:10px 15px;text-align:center;font-size:12px;max-width:min(500px,90vw)}
+#toast{position:absolute;top:145px;left:50%;transform:translateX(-50%);padding:11px 17px;font-weight:850;text-align:center;opacity:0;transition:opacity .2s;max-width:90vw}
+#help{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);padding:9px 14px;text-align:center;font-size:11px;color:#d6e1ff;line-height:1.5;max-width:90vw}
+#actions{position:absolute;right:18px;bottom:22px;display:flex;flex-direction:column;gap:12px;pointer-events:auto}
+.action{width:65px;height:65px;border-radius:50%;border:1px solid #ffffff9c;font-weight:1000;background:linear-gradient(145deg,#77f3ff,#7d9cff);color:#142344;box-shadow:0 7px 22px #03091c70;display:none}
+#use{background:linear-gradient(145deg,#ffe98a,#ff9f66)}
+#joy{position:absolute;left:20px;bottom:25px;width:122px;height:122px;border-radius:50%;border:2px solid #ffffff55;background:#ffffff18;pointer-events:auto;display:none}
+#knob{position:absolute;left:35px;top:35px;width:48px;height:48px;border-radius:50%;border:2px solid white;background:#e6fcffdb;box-shadow:0 5px 18px #0005}
+#centerMark{position:absolute;left:50%;top:50%;width:5px;height:5px;border:1px solid #ffffff8c;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
+#menu{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:18px;background:linear-gradient(130deg,#10152df2,#1c2e58eb)}
+#panel{width:min(610px,100%);padding:clamp(20px,5vw,38px);text-align:center;border-radius:30px;border:1px solid #ffffff36;background:linear-gradient(145deg,#293e71f5,#111a37f8);box-shadow:0 30px 90px #030817b8}
+#logo{font-size:clamp(38px,9vw,68px);line-height:.98;letter-spacing:-3px;font-weight:1000;margin:0;background:linear-gradient(90deg,#6af1ff,#a9b6ff,#ff80d6);color:transparent;background-clip:text}
+.kicker{letter-spacing:4px;font-size:10px;color:#c1d8ff;font-weight:900;margin-top:12px}
+#panel p{color:#e1e9ff;line-height:1.55;font-size:14px;margin:20px auto;max-width:460px}
+.chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:18px 0 24px}.chips span{padding:8px 11px;border-radius:999px;background:#ffffff13;border:1px solid #ffffff20;font-size:12px}
+#start{border:0;border-radius:15px;padding:15px 23px;background:linear-gradient(90deg,#6df1ff,#b1ffd8);color:#13203b;font-weight:1000;font-size:16px;box-shadow:0 6px 0 #2689a0}
+#start:active{transform:translateY(3px);box-shadow:0 3px 0 #2689a0}
+#footnote{font-size:10px!important;color:#aebfe9!important;margin:18px auto 0!important}
+#roomPanel{position:fixed;z-index:8;inset:0;background:#080e20a8;display:none;align-items:center;justify-content:center;padding:18px}
+#roomCard{width:min(500px,100%);padding:22px;border-radius:24px;background:#172344f5;border:1px solid #ffffff35;box-shadow:0 20px 70px #0008}
+#roomCard h2{margin:0 0 5px;font-size:26px}#roomCard p{color:#cbd8fa;font-size:13px}
+.rooms{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.room{border:1px solid #ffffff2e;border-radius:16px;padding:14px;text-align:left;color:white;background:#ffffff0d}
+.room b{display:block;font-size:15px;margin-bottom:5px}.room small{color:#c5d2f2;line-height:1.35;display:block}
+#closeRooms{margin-top:15px;border:1px solid #ffffff3a;background:#ffffff12;color:white;padding:10px 15px;border-radius:12px}
+@media(pointer:coarse){#joy{display:block}#jump,#use{display:block}#actions{bottom:25px}#help{display:none}}
+@media(max-width:600px){#brand{top:9px;left:8px;font-size:13px;padding:8px 10px}#brand small{font-size:8px}#stats{top:9px;right:8px;gap:5px;font-size:11px}.stat{padding:9px}#mission{top:65px;font-size:11px}#toast{top:108px;font-size:12px}.rooms{grid-template-columns:1fr 1fr}#joy{left:14px;bottom:17px;width:108px;height:108px}#knob{left:29px;top:29px}#actions{right:14px;bottom:17px}.action{width:58px;height:58px}}
+</style>
+</head>
+<body>
+<div id="menu">
+ <div id="panel">
+  <h1 id="logo">CLUBVERSE</h1><div class="kicker">SOCIAL PLAYGROUND • 3D</div>
+  <p>Un club en 3D à explorer : personnalise ton avatar, cherche les étoiles, découvre des portails, tente le parcours et joue au basket.</p>
+  <div class="chips"><span>🧍 Avatar personnalisable</span><span>🌟 12 étoiles</span><span>🌀 3 espaces</span><span>📱 PC + mobile</span></div>
+  <button id="start">ENTRER DANS LE CLUB →</button>
+  <p id="footnote">Projet indépendant inspiré des jeux sociaux 3D. Ce n'est pas le jeu officiel Rec Room.<br>Internet requis pour charger le moteur 3D.</p>
+ </div>
+</div>
+<div id="roomPanel"><div id="roomCard"><h2>🌀 Choisis une salle</h2><p>Approche-toi d'un portail ou choisis directement un espace.</p>
+ <div class="rooms">
+  <button class="room" data-room="Lobby"><b>🏠 Club central</b><small>Le point de rencontre et les étoiles.</small></button>
+  <button class="room" data-room="Parkour"><b>🟣 Parcours néon</b><small>Saute entre les plateformes flottantes.</small></button>
+  <button class="room" data-room="Basket"><b>🏀 Terrain de basket</b><small>Envoie le ballon vers les paniers.</small></button>
+  <button class="room" data-room="Avatar"><b>🎨 Style de l'avatar</b><small>Change les couleurs de ton personnage.</small></button>
+ </div><button id="closeRooms">Continuer à explorer</button></div></div>
+<div id="hud">
+ <div id="brand" class="glass">CLUB<span>VERSE</span><small>PLAY • EXPLORE • CREATE</small></div>
+ <div id="stats"><div class="glass stat">⭐ <span id="score">0</span>/12</div><div class="glass stat">📍 <span id="zone">Club central</span></div><button id="roomsBtn" class="glass stat" style="pointer-events:auto;color:white;border:1px solid #ffffff30">☰</button></div>
+ <div id="mission" class="glass">Mission : explore le club et trouve les étoiles cachées.</div>
+ <div id="toast" class="glass"></div><div id="centerMark"></div>
+ <div id="help" class="glass">ZQSD / WASD : bouger · ESPACE : sauter · E : interagir · souris : regarder<br>Mobile : joystick à gauche · glisse pour regarder · boutons à droite</div>
+ <div id="joy"><div id="knob"></div></div>
+ <div id="actions"><button id="use" class="action">↗</button><button id="jump" class="action">SAUT</button></div>
+</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x8bc9f5);scene.fog=new THREE.Fog(0x8bc9f5,40,105);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,220);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xdaf3ff,0x3b466e,2.1));
+const sun=new THREE.DirectionalLight(0xfff6df,2.6);sun.position.set(-15,28,18);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=45;sun.shadow.camera.bottom=-45;scene.add(sun);
+const mat=(c,r=.72,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+const M={navy:mat(0x192849),floor:mat(0x2b3c68),tile:mat(0x344a7a),white:mat(0xf5f7ff),cyan:mat(0x61efff,.3,.08),pink:mat(0xff68d1,.34),yellow:mat(0xffdf73,.36),purple:mat(0x9273ff,.4),blue:mat(0x5c8eff,.4),green:mat(0x65edb0,.45),orange:mat(0xff984f,.5),skin:mat(0xffc6a1),shirt:mat(0x55e4e5),pants:mat(0x425aa2),ball:mat(0xff843e,.65),line:mat(0xffe8c6)};
+const geo=new THREE.BoxGeometry(1,1,1),world=new THREE.Group();scene.add(world);
+function box(p,x,y,z,sx,sy,sz,m){const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
+function cyl(p,x,y,z,rt,rb,h,m,n=24){let o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,n),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;p.add(o);return o}
+function sph(p,x,y,z,r,m,n=20){let o=new THREE.Mesh(new THREE.SphereGeometry(r,n,14),m);o.position.set(x,y,z);o.castShadow=true;p.add(o);return o}
+function tor(p,x,y,z,r,t,m){let o=new THREE.Mesh(new THREE.TorusGeometry(r,t,10,36),m);o.position.set(x,y,z);p.add(o);return o}
+function textBoard(p,x,y,z,w,h,label,color){box(p,x,y,z,w,h,.22,M.navy);box(p,x,y+h*.34,z+.13,w*.88,.08,.04,color); // stylized sign, text is in HUD
+}
+let stars=[],portals=[],platforms=[],ball=null,ballVelocity=new THREE.Vector3(),near=null;
+const zones={Lobby:{x:0,z:0},Parkour:{x:80,z:0},Basket:{x:160,z:0}};
+function base(x,z,w,d,c){box(world,x,-.55,z,w,1,d,mat(c))}
+function star(x,y,z){let g=new THREE.Group();g.position.set(x,y,z);world.add(g);let a=new THREE.Mesh(new THREE.OctahedronGeometry(.39),M.yellow);a.castShadow=true;g.add(a);let r=tor(g,0,0,0,.5,.035,M.cyan);r.rotation.x=Math.PI/2;stars.push({g,got:false,y,phase:Math.random()*8})}
+function portal(x,z,color,target){let g=new THREE.Group();g.position.set(x,0,z);world.add(g);let ring=tor(g,0,1.62,0,.86,.14,mat(color,.28,.1));for(let i=0;i<10;i++){let a=i*Math.PI/5;sph(g,Math.cos(a)*.9,1.62+Math.sin(a)*.9,0,.075,mat(color,.3))}cyl(g,0,.06,0,.72,.72,.12,M.navy,32);portals.push({x,z,target,g});}
+function buildLobby(){
+ base(0,0,34,30,0x25355e);
+ for(let x=-14;x<=14;x+=4)for(let z=-12;z<=12;z+=4)box(world,x,.015,z,3.82,.03,3.82,((x+z)%8===0)?M.tile:M.floor);
+ box(world,0,3,-14.7,34,6,.6,M.navy);box(world,-16.7,3,0,.6,6,30,M.navy);box(world,16.7,3,0,.6,6,30,M.navy);
+ box(world,0,5.9,-14.35,31,.15,.12,M.cyan);box(world,-16.35,5.9,0,.12,.15,28,M.pink);box(world,16.35,5.9,0,.12,.15,28,M.purple);
+ // elevated social stage and ring
+ cyl(world,0,.16,0,4.4,4.5,.35,mat(0x43588b),48);cyl(world,0,.37,0,3.5,3.5,.12,M.cyan,48);cyl(world,0,.47,0,2.8,2.8,.12,mat(0x28385f),48);
+ for(let i=0;i<12;i++){let a=i*Math.PI/6;sph(world,Math.cos(a)*3.9,.48,Math.sin(a)*3.9,.09,[M.pink,M.cyan,M.yellow][i%3])}
+ // pillars, lights, planters
+ for(const [x,z,c] of [[-13,-11,0x61efff],[13,-11,0xff68d1],[-13,11,0x9273ff],[13,11,0xffdf73]]){
+ box(world,x,2.2,z,.85,4.4,.85,mat(c,.32,.1));box(world,x,4.5,z,1.2,.18,1.2,M.white);cyl(world,x,.25,z,.8,.85,.35,M.navy);
+ }
+ for(let x of [-8,8]){box(world,x,.55,5,4,.75,1.5,mat(0x6258b8));box(world,x,1.08,5.55,4,1.05,.32,mat(0x8a7ae5));box(world,x,.22,4.1,4,.25,.4,M.navy)}
+ // arcade pods
+ for(let i=0;i<3;i++){let x=-5+i*2.4;box(world,x,1.25,-10.8,1.4,2.5,.9,M.navy);box(world,x,1.62,-10.3,1.05,.8,.09,[M.pink,M.cyan,M.yellow][i]);box(world,x,.36,-10.15,.72,.14,.12,M.white);sph(world,x,.9,-10.17,.08,M.yellow)}
+ portal(-9,-7,0x61efff,'Parkour');portal(9,-7,0xff68d1,'Basket');
+ for(let i=0;i<5;i++)star(-11+i*2.1,1.3,1.8);star(0,2.0,0);star(-12,1.4,7);star(12,1.4,7);
+ // big decorative hanging rings
+ for(let i=0;i<3;i++){let r=tor(world,-5+i*5,4.9,-13.4,1.2,.09,[M.cyan,M.pink,M.purple][i]);r.rotation.y=.3}
+ textBoard(world,0,3.2,-13.7,6,1.6,'',M.cyan);
+}
+function buildParkour(){
+ let cx=80;base(cx,0,35,30,0x26365c);box(world,cx,.02,0,31,.04,26,M.floor);
+ for(let i=0;i<10;i++){let x=cx-14+i*3.1,z=-5+(i%2)*3.2,y=.45+i*.28,w=2.4;box(world,x,y,z,w,.5,w,[M.cyan,M.purple,M.pink,M.yellow][i%4]);platforms.push({x,z,top:y+.25,w,d:w});cyl(world,x,y+.33,z,.14,.14,.12,M.white,12);if(i%2===0)star(x,y+1.1,z)}
+ for(let i=0;i<3;i++){let r=tor(world,cx-7+i*7,3.3,-10,1,.12,[M.cyan,M.pink,M.yellow][i]);r.rotation.x=Math.PI/2}
+ portal(cx-13,9,0x61efff,'Lobby');box(world,cx,0.05,10,18,.15,5,mat(0x3c5485));
+ for(let i=0;i<4;i++)star(cx-10+i*6,1.5,-11);
+}
+function buildBasket(){
+ let cx=160;base(cx,0,35,30,0x326b76);box(world,cx,.03,0,30,.08,21,mat(0xd5a06a));
+ for(let x=-12;x<=12;x+=4)box(world,cx+x,.08,0,.055,.025,20,M.line);box(world,cx,.085,0,.08,.025,20,M.line);
+ for(let side of [-1,1]){box(world,cx+side*11,2.8,0,.22,5,.22,M.white);box(world,cx+side*11,5.3,0,2.7,1.65,.18,M.white);box(world,cx+side*11,5.3,.12,2.25,1.2,.1,M.cyan);let hoop=tor(world,cx+side*11,4.55,.47,.52,.07,M.orange);hoop.rotation.x=Math.PI/2;for(let i=0;i<5;i++)box(world,cx+side*11-.35+i*.17,4.23,.47,.018,.48,.018,M.white)}
+ portal(cx-13,9,0xff68d1,'Lobby');ball=sph(world,cx,1,4,.48,M.ball,24);tor(world,cx,1,4,.49,.025,M.navy);for(let i=0;i<4;i++)star(cx-7+i*4,1.4,-7+(i%2)*2);
+}
+buildLobby();buildParkour();buildBasket();
+// custom toy-like avatar
+const avatar=new THREE.Group();scene.add(avatar);const body=new THREE.Group();avatar.add(body);
+const skin= M.skin,shirt=M.shirt,pants=M.pants;
+box(body,0,1.05,0,.76,.92,.48,shirt);sph(body,0,1.86,0,.41,skin,24);
+box(body,0,2.12,-.01,.66,.16,.48,M.purple);box(body,0,2.2,.01,.48,.12,.4,M.purple);
+for(let x of [-.145,.145]){sph(body,x,1.94,.36,.055,M.navy,12);sph(body,x,1.95,.405,.023,M.white,10)}
+sph(body,0,1.76,.4,.07,mat(0xff8f8b),12);
+let leftArm=box(body,-.51,1.1,0,.22,.68,.23,skin),rightArm=box(body,.51,1.1,0,.22,.68,.23,skin);
+box(body,-.24,.34,0,.27,.68,.3,pants);box(body,.24,.34,0,.27,.68,.3,pants);box(body,-.25,.075,.08,.34,.15,.42,M.white);box(body,.25,.075,.08,.34,.15,.42,M.white);
+let hat=box(body,0,2.3,0,.62,.09,.45,M.cyan);
+let spawn={x:0,z:8};avatar.position.set(spawn.x,0,spawn.z);
+let yaw=0,pitch=-.12,vy=0,onGround=true,moveX=0,moveZ=0;const keys={};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if([' ','arrowup','arrowdown'].includes(e.key.toLowerCase()))e.preventDefault();if(e.key.toLowerCase()==='e')interact();if(e.key.toLowerCase()===' ')jump();if(e.key.toLowerCase()==='escape')document.getElementById('roomPanel').style.display='none'});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+let lookPointer=null,lastX=0,lastY=0;
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){lookPointer=e.pointerId;lastX=e.clientX;lastY=e.clientY;}else{lookPointer=e.pointerId;lastX=e.clientX;lastY=e.clientY;}});
+addEventListener('pointerup',e=>{if(e.pointerId===lookPointer)lookPointer=null});
+addEventListener('pointercancel',()=>lookPointer=null);
+addEventListener('pointermove',e=>{if(lookPointer===e.pointerId){let dx=e.clientX-lastX,dy=e.clientY-lastY;yaw-=dx*.0045;pitch=Math.max(-.65,Math.min(.22,pitch+dy*.0025));lastX=e.clientX;lastY=e.clientY}});
+renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
+function jump(){if(onGround){vy=7.6;onGround=false}}
+document.getElementById('jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});document.getElementById('use').addEventListener('pointerdown',e=>{e.preventDefault();interact()});
+const joy=document.getElementById('joy'),knob=document.getElementById('knob');let joyId=null,joyC=null;
+joy.addEventListener('pointerdown',e=>{e.preventDefault();joyId=e.pointerId;joy.setPointerCapture(joyId);let r=joy.getBoundingClientRect();joyC={x:r.left+r.width/2,y:r.top+r.height/2};joyMove(e)});
+joy.addEventListener('pointermove',e=>{if(e.pointerId===joyId)joyMove(e)});
+function joyMove(e){if(!joyC)return;let dx=e.clientX-joyC.x,dy=e.clientY-joyC.y,l=Math.hypot(dx,dy),max=34;if(l>max){dx=dx/l*max;dy=dy/l*max}knob.style.left=(35+dx)+'px';knob.style.top=(35+dy)+'px';moveX=dx/max;moveZ=dy/max}
+function joyReset(e){if(e.pointerId===joyId){joyId=null;joyC=null;moveX=moveZ=0;knob.style.left='35px';knob.style.top='35px'}}
+joy.addEventListener('pointerup',joyReset);joy.addEventListener('pointercancel',joyReset);
+let toastTimer;function toast(t){const el=document.getElementById('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.opacity=0,2200)}
+function setZone(z){if(z==='Avatar'){document.getElementById('roomPanel').style.display='none';avatarColor();return}zone=z;let p=zones[z];avatar.position.set(p.x,z==='Parkour'?1.2:0,z==='Basket'?8:z==='Parkour'?9:8);vy=0;spawn={x:avatar.position.x,z:avatar.position.z};document.getElementById('zone').textContent=z==='Lobby'?'Club central':z==='Parkour'?'Parcours néon':'Basket';document.getElementById('mission').textContent=z==='Lobby'?'Mission : explore le club et trouve les étoiles cachées.':z==='Parkour'?'Mission : saute entre les plateformes et récupère les étoiles.':'Mission : approche du ballon et appuie sur ↗ pour le lancer.';document.getElementById('roomPanel').style.display='none';toast(z==='Lobby'?'Bienvenue au club central !':z==='Parkour'?'Parcours néon : à toi de jouer !':'Terrain de basket : lance le ballon !')}
+function avatarColor(){let colors=[0x55e4e5,0xff68d1,0x9273ff,0xff984f,0x65edb0,0xffdf73];let c=colors[Math.floor(Math.random()*colors.length)];shirt.color.setHex(c);hat.material=[M.cyan,M.pink,M.purple,M.orange,M.green,M.yellow][colors.indexOf(c)].color;document.getElementById('roomPanel').style.display='none';toast('Nouveau style débloqué ! 🎨')}
+function interact(){if(near&&near.type==='portal'){setZone(near.target);return}if(zone==='Basket'&&ball&&avatar.position.distanceTo(ball.position)<3.1){let d=new THREE.Vector3(Math.sin(yaw),.5,-Math.cos(yaw)).normalize();ballVelocity.copy(d.multiplyScalar(10));ballVelocity.y+=3;toast('LANCER ! 🏀');return}if(zone==='Basket')toast('Approche-toi du ballon pour le lancer !');else toast('Explore les salles pour découvrir les activités !')}
+function findNear(){near=null;let best=999;for(let p of portals){let d=Math.hypot(avatar.position.x-p.x,avatar.position.z-p.z);if(d<2.8&&d<best){best=d;near={type:'portal',target:p.target}}}if(zone==='Basket'&&ball){let d=avatar.position.distanceTo(ball.position);if(d<3.1&&d<best)near={type:'ball'}}document.getElementById('use').style.opacity=near?'1':'.62'}
+function updatePlayer(dt){let ix=0,iz=0;if(keys.w||keys.z||keys.arrowup)iz-=1;if(keys.s||keys.arrowdown)iz+=1;if(keys.a||keys.q||keys.arrowleft)ix-=1;if(keys.d||keys.arrowright)ix+=1;ix+=moveX;iz+=moveZ;let l=Math.hypot(ix,iz);if(l>1){ix/=l;iz/=l}
+ let f=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),r=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));let dir=f.multiplyScalar(-iz).add(r.multiplyScalar(ix));if(dir.lengthSq()>.001){dir.normalize();avatar.position.x+=dir.x*6.2*dt;avatar.position.z+=dir.z*6.2*dt;body.rotation.y=Math.atan2(dir.x,dir.z)}
+ vy-=18*dt;avatar.position.y+=vy*dt;let ground=0;
+ if(zone==='Parkour'){ground=-2.5;if(avatar.position.x>66&&avatar.position.x<94&&avatar.position.z>7)ground=0;for(let p of platforms){if(Math.abs(avatar.position.x-p.x)<p.w*.52&&Math.abs(avatar.position.z-p.z)<p.d*.52&&avatar.position.y>=p.top-.35)ground=Math.max(ground,p.top)}}
+ if(avatar.position.y<=ground){avatar.position.y=ground;vy=0;onGround=true}else onGround=false;
+ let cx=zones[zone]?.x||0;avatar.position.x=Math.max(cx-15.5,Math.min(cx+15.5,avatar.position.x));avatar.position.z=Math.max(-13,Math.min(13,avatar.position.z));
+ if(zone==='Parkour'&&avatar.position.y<-3){avatar.position.set(80,1.2,9);vy=0;toast('Oups ! Réessaie le parcours.')}
+ body.position.y=onGround&&l>.1?Math.abs(Math.sin(performance.now()*.012))*.07:0;leftArm.rotation.z=l>.1?Math.sin(performance.now()*.012)*.25:-.08;rightArm.rotation.z=l>.1?-Math.sin(performance.now()*.012)*.25:.08}
+function updateStars(t,dt){for(let s of stars){if(s.got)continue;s.g.rotation.y+=dt*1.4;s.g.position.y=s.y+Math.sin(t*.002+s.phase)*.16;if(avatar.position.distanceTo(s.g.position)<1.15){s.got=true;world.remove(s.g);let n=Number(document.getElementById('score').textContent)+1;document.getElementById('score').textContent=n;toast(n===12?'BRAVO ! Tu as trouvé les 12 étoiles ! 🏆':'Étoile récupérée ! ⭐')}}}
+function updateBall(dt){if(!ball)return;ball.position.addScaledVector(ballVelocity,dt);ballVelocity.y-=9.8*dt;if(ball.position.y<.48){ball.position.y=.48;ballVelocity.y=Math.abs(ballVelocity.y)*.62;ballVelocity.x*=.8;ballVelocity.z*=.8;if(ballVelocity.length()<.5)ballVelocity.set(0,0,0)}if(ball.position.x<146||ball.position.x>174||ball.position.z<-12||ball.position.z>12){ball.position.set(160,1,4);ballVelocity.set(0,0,0)}ball.rotation.x+=ballVelocity.z*dt;ball.rotation.z-=ballVelocity.x*dt}
+function updateCamera(dt){let target=new THREE.Vector3(avatar.position.x,avatar.position.y+1.3,avatar.position.z),d=6.4;let want=new THREE.Vector3(target.x+Math.sin(yaw)*d*Math.cos(pitch),target.y+2+Math.sin(pitch)*d,target.z+Math.cos(yaw)*d*Math.cos(pitch));camera.position.lerp(want,1-Math.pow(.001,dt));camera.lookAt(target)}
+document.getElementById('start').onclick=()=>{document.getElementById('menu').style.display='none';toast('Bienvenue dans ClubVerse ! 🌈')};
+document.getElementById('roomsBtn').onclick=()=>document.getElementById('roomPanel').style.display='flex';
+document.getElementById('closeRooms').onclick=()=>document.getElementById('roomPanel').style.display='none';
+document.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>setZone(b.dataset.room));
+let clock=new THREE.Clock();function frame(){requestAnimationFrame(frame);let dt=Math.min(clock.getDelta(),.04),t=performance.now();updatePlayer(dt);updateStars(t,dt);updateBall(dt);findNear();updateCamera(dt);renderer.render(scene,camera)}frame();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body>
+</html>
